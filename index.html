@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>엔젤슈트 H10 챗봇</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: #2a2a2a;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .chat-header h1 {
+            margin-left: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 80%;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3a3a3a;
+        }
+
+        .message-content {
+            background-color: #2a2a2a;
+            padding: 1rem;
+            border-radius: 1rem;
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background-color: #2a2a2a;
+            border-top: 1px solid #3a3a3a;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .send-button {
+            color: #ff5722;
+        }
+
+        .material-icons {
+            font-size: 24px;
+        }
+        
+        /* 추가: 반응형 디자인 */
+        @media (max-width: 768px) {
+            .message {
+                max-width: 90%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .message {
+                max-width: 95%;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .material-icons {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <button class="menu-button">
+                <span class="material-icons">menu</span>
+            </button>
+            <h1>엔젤슈트 H10 챗봇</h1>
+            <div class="header-actions">
+                <button class="search-button">
+                    <span class="material-icons">search</span>
+                </button>
+                <button class="grid-button">
+                    <span class="material-icons">grid_view</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="messages-container" id="messages">
+            <!-- Messages will be added here -->
+        </div>
+
+        <form class="input-container" id="chat-form">
+            <button type="button" class="attach-button">
+                <span class="material-icons">attach_file</span>
+            </button>
+            <input type="text" id="message-input" placeholder="메시지를 입력하세요...">
+            <button type="button" class="voice-button">
+                <span class="material-icons">mic</span>
+            </button>
+            <button type="submit" class="send-button">
+                <span class="material-icons">send</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // 샘플 Q&A 데이터
+        const qaPairs = [
+            {
+                question: "엔젤슈트 H10의 주요 기능은 무엇인가요?",
+                keywords: ["주요", "기능", "기능은", "뭐", "뭔가", "무엇", "어떤"],
+                answer: "엔젤슈트 H10은 척추 건강을 위한 척추 교정기입니다. 주요 기능으로는 척추 교정, 자세 교정, 통증 완화, 근육 이완 등이 있습니다. 척추의 자연스러운 곡선을 유지하고 잘못된 자세를 교정하여 척추 건강을 증진시킵니다."
+            },
+            {
+                question: "엔젤슈트 H10의 배터리 지속시간은 얼마인가요?",
+                keywords: ["배터리", "충전", "시간", "지속", "얼마나", "얼마"],
+                answer: "엔젤슈트 H10의 배터리 지속시간은 한 번 충전 시 약 2시간입니다. 배터리가 완전히 소모되면 충전이 필요하며, 충전 시간은 약 1시간이 소요됩니다."
+            },
+            {
+                question: "엔젤슈트 H10은 어떤 재질로 만들어졌나요?",
+                keywords: ["재질", "소재", "뭐로", "무엇으로", "어떤", "만들"],
+                answer: "엔젤슈트 H10은 통기성이 좋은 메쉬 소재와 탄력 있는 고품질 고무밴드로 만들어졌습니다. 피부에 자극이 적고 땀을 잘 흡수하며, 오래 사용해도 변형이 적습니다."
+            },
+            {
+                question: "사용 시 주의사항은 무엇인가요?",
+                keywords: ["주의", "주의사항", "조심", "위험", "사용시", "사용할때"],
+                answer: "엔젤슈트 H10 사용 시 주의사항: 1) 처음 사용 시 15-20분만 착용하고 점진적으로 늘리세요. 2) 하루 2-3시간만 착용하세요. 3) 수면 중 착용 금지. 4) 심한 통증이나 부상 시 의사와 상담 후 사용. 5) 착용 중 통증이 있으면 즉시 중단하세요."
+            },
+            {
+                question: "가격이 얼마인가요?",
+                keywords: ["가격", "금액", "비용", "얼마", "원", "만원"],
+                answer: "엔젤슈트 H10의 가격은 기본 모델이 299,000원이며, 프리미엄 모델은 349,000원입니다. 자세한 가격 정보와 할인 프로모션은 공식 웹사이트에서 확인하실 수 있습니다."
+            },
+            {
+                question: "세탁이나 청소는 어떻게 하나요?",
+                keywords: ["세탁", "청소", "관리", "씻", "닦", "세척", "더러", "때"],
+                answer: "엔젤슈트 H10은 부드러운 천에 물을 약간 묻혀 표면을 닦아주세요. 화학 세제나 알코올 사용은 피해주시고, 절대 물에 담그거나 세탁기를 사용하지 마세요. 사용 후 통풍이 잘 되는 곳에 보관하는 것이 좋습니다."
+            }
+        ];
+
+        const messagesContainer = document.getElementById('messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+
+        // 첫 로딩시 인사 메시지 추가
+        window.addEventListener('DOMContentLoaded', () => {
+            addMessage("안녕하세요! 엔젤슈트 H10에 대해 어떤 것이 궁금하신가요?", true);
+        });
+
+        function addMessage(content, isAI = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isAI ? 'ai-message' : 'user-message'}`;
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar"></div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span>${isAI ? 'AI Assistant' : 'You'}</span>
+                        <span>${timestamp}</span>
+                    </div>
+                    <p>${content}</p>
+                    ${isAI ? `
+                        <div class="message-actions">
+                            <button><span class="material-icons">thumb_up</span></button>
+                            <button><span class="material-icons">thumb_down</span></button>
+                            <button><span class="material-icons">refresh</span></button>
+                            <button><span class="material-icons">content_copy</span></button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function findAnswer(message) {
+            // 입력 메시지 정규화
+            const userInput = message.toLowerCase().replace(/[?!.,]/g, '').trim();
+            
+            // 기본 응답
+            const defaultResponse = "죄송합니다. 그 질문에 대한 답변을 찾을 수 없습니다. 다른 질문을 해주시거나 '주요 기능', '배터리', '재질', '주의사항'에 대해 질문해보세요.";
+            
+            // 직접 일치하는 패턴 먼저 확인
+            if (userInput.includes('안녕') || userInput.includes('하이') || userInput.includes('반가')) {
+                return "안녕하세요! 엔젤슈트 H10에 대해 무엇이 궁금하신가요?";
+            }
+            
+            // 각 질문에 대한 키워드 매칭 점수 계산
+            let bestMatch = null;
+            let highestScore = 0;
+            
+            for (const qa of qaPairs) {
+                let matchScore = 0;
+                
+                // 주요 키워드 매칭 (가중치 2)
+                for (const keyword of qa.keywords) {
+                    if (userInput.includes(keyword)) {
+                        matchScore += 2;
+                    }
+                }
+                
+                // 추가 키워드 매칭 (질문에서 추출한 단어들)
+                const questionWords = qa.question.toLowerCase().replace(/[?!.,]/g, '').split(/\s+/);
+                for (const word of questionWords) {
+                    if (word.length > 1 && userInput.includes(word)) {
+                        matchScore += 1;
+                    }
+                }
+                
+                // 최고 점수 업데이트
+                if (matchScore > highestScore) {
+                    highestScore = matchScore;
+                    bestMatch = qa.answer;
+                }
+            }
+            
+            // 일정 점수 이상일 때만 응답
+            return (highestScore >= 1) ? bestMatch : defaultResponse;
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message);
+            messageInput.value = '';
+            
+            // 잠시 후 응답 추가 (타이핑 효과를 위해)
+            setTimeout(() => {
+                const answer = findAnswer(message);
+                addMessage(answer, true);
+            }, 500);
+        });
+    </script>
+</body>
+</html> 
